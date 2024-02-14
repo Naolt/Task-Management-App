@@ -41,6 +41,46 @@ async function getAllProjects(req, res) {
   }
 }
 
+// Get User Projects
+async function getUserProjects(req, res) {
+  const user = req.user; // Assuming user information is stored in req.user after authentication
+
+  try {
+    // Fetch the projects owned by the user
+    const ownedProjects = await prisma.project.findMany({
+      where: {
+        user: {
+          id: user.id,
+        },
+      },
+    });
+
+    // Fetch the projects where the user is a member
+    const memberProjects = await prisma.projectMembers.findMany({
+      where: {
+        user: {
+          id: user.id,
+        },
+      },
+      include: {
+        project: true,
+      },
+    });
+
+    // Construct the response object
+    const response = {
+      ownedProjects,
+      memberProjects: memberProjects.map((member) => member.project),
+    };
+
+    // Respond with the project information
+    res.json(response);
+  } catch (error) {
+    console.error("Error fetching project information:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
 // Create a new project
 async function createProject(req, res) {
   const { name, description } = req.body;
@@ -237,4 +277,5 @@ module.exports = {
   validateProjectCreation,
   addMemberToProject,
   removeMemberFromProject,
+  getUserProjects,
 };

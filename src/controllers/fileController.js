@@ -3,6 +3,7 @@ const fs = require("fs");
 //const { PrismaClient } = require("@prisma/client");
 //const prisma = new PrismaClient();
 const { prisma } = require("../utils/prisma");
+const archiver = require("archiver");
 
 // Upload attachment to a specific task route
 const uploadAttachment = async (req, res) => {
@@ -91,8 +92,51 @@ const deleteAttachmentById = async (req, res) => {
   }
 };
 
+const exportData = async (req, res) => {
+  const tableData = await retrieveDataFromAllTables();
+
+  // Create a zip file
+  const archive = archiver("zip", {
+    zlib: { level: 9 }, // Compression level (0-9)
+  });
+
+  // Set the content type to zip
+  res.attachment("data-export.zip");
+  archive.pipe(res);
+
+  // Add data to the zip file for each table
+  Object.keys(tableData).forEach((tableName) => {
+    const jsonData = JSON.stringify(tableData[tableName]);
+    archive.append(jsonData, { name: `${tableName}.json` });
+  });
+
+  // Finalize the zip file
+  archive.finalize();
+};
+
+async function retrieveDataFromAllTables() {
+  try {
+    const userData = await prisma.user.findMany();
+    const projectData = await prisma.project.findMany();
+    const taskData = await prisma.task.findMany();
+    // Add more tables as needed
+
+    return {
+      user: userData,
+      project: projectData,
+      task: taskData,
+      // Add more tables as needed
+    };
+  } catch (error) {
+    console.error("Error retrieving data from tables:", error);
+    throw error;
+  }
+}
+
 module.exports = {
   uploadAttachment,
   getAttachmentById,
   deleteAttachmentById,
+  retrieveDataFromAllTables,
+  exportData,
 };

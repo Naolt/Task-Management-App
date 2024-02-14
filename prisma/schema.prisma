@@ -23,6 +23,7 @@ model User {
   tasks          Task[]           @relation("AllTasks")
   createdTasks   Task[]           @relation("CreatedBy")
   assignedTasks  Task[]           @relation("AssignedTo")
+  twoFactorSecret  String?  
 }
 
 // Define the Project model
@@ -43,6 +44,10 @@ model ProjectMembers {
   user_id    Int
   project    Project @relation(fields: [project_id], references: [id])
   project_id Int
+  // New fields to represent permissions
+  can_view   Boolean @default(false)
+  can_edit   Boolean @default(false)
+
 
   @@id([user_id, project_id])
 }
@@ -53,7 +58,7 @@ model Task {
   title          String
   description    String?
   due_date       DateTime?
-  completed      Boolean      @default(false)
+  completed      String      @default("backlog")
   project_id     Int
   created_at     DateTime     @default(now())
   project        Project      @relation(fields: [project_id], references: [id])

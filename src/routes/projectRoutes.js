@@ -8,6 +8,13 @@ const roleMiddleware = require("../middlewares/roleMiddleware");
 // Fetch all projects route
 router.get("/", authMiddleware, projectController.getAllProjects);
 
+// Fetch all user projects route
+router.get(
+  "/getUserProjects",
+  authMiddleware,
+  projectController.getUserProjects
+);
+
 // Create a new project route
 router.post(
   "/",
